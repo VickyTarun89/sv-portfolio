@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 15% 4%;
+    --foreground: 210 20% 92%;
+
+    --card: 240 18% 7%;
+    --card-foreground: 210 20% 92%;
+
+    --popover: 240 18% 7%;
+    --popover-foreground: 210 20% 92%;
+
+    --primary: 191 100% 50%;
+    --primary-foreground: 240 15% 4%;
+
+    --secondary: 240 18% 9%;
+    --secondary-foreground: 210 20% 92%;
+
+    --muted: 240 10% 14%;
+    --muted-foreground: 220 10% 55%;
+
+    --accent: 24 100% 50%;
+    --accent-foreground: 240 15% 4%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 240 10% 16%;
+    --input: 240 10% 16%;
+    --ring: 191 100% 50%;
+
+    --radius: 0.5rem;
+
+    --neon-blue: 191 100% 50%;
+    --neon-orange: 24 100% 50%;
+    --neon-blue-glow: 0 0% 100% / 0.05;
+    --surface-dark: 240 18% 7%;
+    --surface-darker: 240 15% 4%;
+    --metallic: 220 10% 70%;
+
+    --sidebar-background: 240 18% 7%;
+    --sidebar-foreground: 210 20% 92%;
+    --sidebar-primary: 191 100% 50%;
+    --sidebar-primary-foreground: 240 15% 4%;
+    --sidebar-accent: 240 10% 14%;
+    --sidebar-accent-foreground: 210 20% 92%;
+    --sidebar-border: 240 10% 16%;
+    --sidebar-ring: 191 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Orbitron', monospace;
+  }
+
+  ::selection {
+    background: hsl(191 100% 50% / 0.3);
+    color: hsl(210 20% 92%);
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(240 15% 4%);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(191 100% 50% / 0.3);
+    border-radius: 3px;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Orbitron', monospace;
+  }
+  .font-body {
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .text-glow-blue {
+    text-shadow: 0 0 20px hsl(191 100% 50% / 0.6), 0 0 40px hsl(191 100% 50% / 0.3);
+  }
+  .text-glow-orange {
+    text-shadow: 0 0 20px hsl(24 100% 50% / 0.6), 0 0 40px hsl(24 100% 50% / 0.3);
+  }
+  .box-glow-blue {
+    box-shadow: 0 0 15px hsl(191 100% 50% / 0.3), 0 0 30px hsl(191 100% 50% / 0.15), inset 0 0 15px hsl(191 100% 50% / 0.05);
+  }
+  .box-glow-orange {
+    box-shadow: 0 0 15px hsl(24 100% 50% / 0.3), 0 0 30px hsl(24 100% 50% / 0.15), inset 0 0 15px hsl(24 100% 50% / 0.05);
+  }
+  .border-glow-blue {
+    border-color: hsl(191 100% 50% / 0.5);
+    box-shadow: 0 0 10px hsl(191 100% 50% / 0.2);
+  }
+
+  .glass-tron-card {
+    @apply bg-[#0B0B0F]/40 backdrop-blur-xl border border-white/10 hover:border-primary/40 transition-all duration-300 shadow-2xl;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.02);
+  }
+
+  .glass-panel {
+    @apply bg-white/[0.02] backdrop-blur-md border border-white/10;
+  }
+
+  .grid-floor {
+    background-image:
+      linear-gradient(hsl(191 100% 50% / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(191 100% 50% / 0.05) 1px, transparent 1px);
+    background-size: 80px 80px;
+  }
+
+  .bg-tron-grid {
+    background-image: 
+      linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 100px 100px;
+  }
+
+  .perspective-grid {
+    perspective: 1000px;
+  }
+}
