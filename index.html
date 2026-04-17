@@ -10,15 +10,33 @@
 
     <meta property="og:title" content="M. Shree Vignesh | AI & Systems Engineering Portfolio" />
     <meta property="og:description" content="Explore modular AI systems and technical architectures built by M. Shree Vignesh." />
-    <meta property="og:type" content="website" />
     <meta property="og:url" content="https://shreevigneshm.pages.dev/" />
     <meta property="og:image" content="/placeholder.svg" />
+    <link rel="canonical" href="https://shreevigneshm.pages.dev/" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="M. Shree Vignesh | AI & Systems Engineering Portfolio" />
     <meta name="twitter:description" content="Technical portfolio showcasing AI automation and system architecture." />
     <meta name="twitter:image" content="/placeholder.svg" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- LinkedIn Parameter Shield: Clean tracking params before Router loads -->
+    <script>
+      (function() {
+        const url = new URL(window.location.href);
+        const params = ['trk', 'li_fat_id', 'fbclid'];
+        let changed = false;
+        params.forEach(p => {
+          if (url.searchParams.has(p)) {
+            url.searchParams.delete(p);
+            changed = true;
+          }
+        });
+        if (changed) {
+          window.history.replaceState({}, document.title, url.pathname + url.search + url.hash);
+        }
+      })();
+    </script>
   </head>
 
   <body>
