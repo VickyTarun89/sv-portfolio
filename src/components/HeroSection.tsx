@@ -19,7 +19,7 @@ const HeroSection = () => {
           className="flex flex-col items-end"
         >
           <span className="font-display text-sm tracking-[0.5em] text-primary uppercase">
-            Shree Vignesh
+            M. Shree Vignesh
           </span>
           <div className="w-12 h-px bg-primary/40 mt-1" />
         </motion.div>
