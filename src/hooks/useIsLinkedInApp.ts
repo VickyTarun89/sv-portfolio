@@ -1,20 +1,28 @@
 import { useState, useEffect } from "react";
 
+const checkLinkedIn = () => {
+  if (typeof window === "undefined") return false;
+  
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+  
+  // LinkedIn app user agent string checks
+  return !!(
+    userAgent.includes("LinkedInApp") || 
+    userAgent.includes("LinkedIn")
+  );
+};
+
 export const useIsLinkedInApp = () => {
-  const [isLinkedIn, setIsLinkedIn] = useState(false);
+  // Initialize state synchronously from the User Agent
+  const [isLinkedIn, setIsLinkedIn] = useState(checkLinkedIn);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-    
-    // LinkedIn app user agent string usually contains specific keywords
-    const isLinkedInWebView = 
-      userAgent.includes("LinkedInApp") || 
-      userAgent.includes("LinkedIn");
-
-    setIsLinkedIn(!!isLinkedInWebView);
-  }, []);
+    // Re-verify in case of hydration or late updates
+    const current = checkLinkedIn();
+    if (current !== isLinkedIn) {
+      setIsLinkedIn(current);
+    }
+  }, [isLinkedIn]);
 
   return isLinkedIn;
 };
