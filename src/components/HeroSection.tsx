@@ -1,7 +1,11 @@
 import { motion } from "framer-motion";
 import SpeedLines from "./SpeedLines";
 
+import { useIsLinkedInApp } from "@/hooks/useIsLinkedInApp";
+
 const HeroSection = () => {
+  const isLinkedIn = useIsLinkedInApp();
+
   return (
     <section className="relative h-screen min-h-[600px] overflow-hidden bg-[#0B0B0F]">
       {/* Brand Header */}
@@ -21,7 +25,11 @@ const HeroSection = () => {
 
       {/* Background layer */}
       <div className="absolute inset-0 w-full h-full z-0">
-        <SpeedLines />
+        {isLinkedIn ? (
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#1a1a2e_0%,#0B0B0F_100%)] opacity-80" />
+        ) : (
+          <SpeedLines />
+        )}
       </div>
 
       {/* Radial vignette overlay */}
