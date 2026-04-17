@@ -1,13 +1,15 @@
 import { useEffect, useRef } from "react";
+import { useInView } from "framer-motion";
 
 const charSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%\"'#&_(),.;:?!\\|{}<>[]^~あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん";
 
 const MatrixRain = ({ opacity = 0.3 }: { opacity?: number }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isInView = useInView(canvasRef);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !isInView) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -66,7 +68,7 @@ const MatrixRain = ({ opacity = 0.3 }: { opacity?: number }) => {
       clearInterval(interval);
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [isInView]);
 
   return (
     <canvas

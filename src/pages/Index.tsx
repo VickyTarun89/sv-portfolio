@@ -75,18 +75,6 @@ const Index = () => {
           <div ref={contactRef}>
             <ContactSection />
           </div>
-          
-          {/* Interactive AI Agent Simulation Section */}
-          <section className="relative w-full h-[90vh] min-h-[600px] border-t border-white/10 overflow-hidden bg-[#050510]">
-            <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,#050510_100%)]" />
-            </div>
-            <iframe 
-              src="/simulator/index.html" 
-              className="relative z-10 w-full h-full border-0"
-              title="Interactive AI Agent Simulation"
-            />
-          </section>
         </div>
       </div>
     </main>

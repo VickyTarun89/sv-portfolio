@@ -1,4 +1,5 @@
 import { Suspense, useRef, useState, useEffect } from "react";
+import { useInView } from "framer-motion";
 import { Canvas, useFrame } from "@react-three/fiber";
 import FighterJetWireframe from "./FighterJetWireframe";
 import GlobeWireframe from "./GlobeWireframe";
@@ -65,6 +66,7 @@ const WireframeScene = ({ activePhase }: WireframeCanvasProps) => {
 
 const WireframeCanvas = ({ activePhase }: WireframeCanvasProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef);
 
   // Force pointer-events:none on the actual <canvas> element inside R3F
   useEffect(() => {
@@ -74,7 +76,7 @@ const WireframeCanvas = ({ activePhase }: WireframeCanvasProps) => {
         canvas.style.pointerEvents = "none";
       }
     }
-  });
+  }, []);
 
   return (
     <div
@@ -84,6 +86,7 @@ const WireframeCanvas = ({ activePhase }: WireframeCanvasProps) => {
     >
       <Canvas
         dpr={[1, 1.5]}
+        frameloop={isInView ? "always" : "never"}
         camera={{ position: [0, 1.5, 10], fov: 45 }}
         style={{ background: "transparent", pointerEvents: "none" }}
         gl={{ alpha: true, antialias: true }}

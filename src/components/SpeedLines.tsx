@@ -1,4 +1,5 @@
 import { useRef, useMemo, useState, useEffect } from "react";
+import { useInView } from "framer-motion";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Line, PerspectiveCamera, Edges } from "@react-three/drei";
 import * as THREE from "three";
@@ -57,8 +58,8 @@ function CarStreak({ id, lane, initialZ, color = "#00D4FF" }: { id: number, lane
 
 function GridCity({ scrollY, isMobile }: { scrollY: number, isMobile: boolean }) {
   const ref = useRef<THREE.Group>(null!);
-  const buildingCount = isMobile ? 25 : 45;
-  const trafficCount = isMobile ? 6 : 12;
+  const buildingCount = isMobile ? 15 : 45;
+  const trafficCount = isMobile ? 4 : 12;
 
   const buildings = useMemo(() => {
     const b = [];
@@ -140,6 +141,8 @@ const SpeedLines = () => {
   const [clickCount, setClickCount] = useState(0);
   const [scrollY, setScrollY] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -154,8 +157,8 @@ const SpeedLines = () => {
   }, []);
 
   return (
-    <div className="absolute inset-0 w-full h-full bg-[#0B0B0F]" onMouseDown={() => setClickCount(c => c + 1)}>
-      <Canvas>
+    <div ref={containerRef} className="absolute inset-0 w-full h-full bg-[#0B0B0F]" onMouseDown={() => setClickCount(c => c + 1)}>
+      <Canvas dpr={[1, 1.5]} frameloop={isInView ? "always" : "never"}>
         <PerspectiveCamera makeDefault position={[0, 0, 30]} fov={isMobile ? 85 : 60} />
         <color attach="background" args={["#0B0B0F"]} />
         <ambientLight intensity={1.5} />
