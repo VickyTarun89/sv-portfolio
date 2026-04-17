@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { useScroll, useTransform, motion } from "framer-motion";
+import { lazy, Suspense } from "react";
 import HeroSection from "@/components/HeroSection";
 import StoryTimeline from "@/components/StoryTimeline";
 import FeaturedProject from "@/components/FeaturedProject";
@@ -9,6 +10,9 @@ import PhilosophySection from "@/components/PhilosophySection";
 import FutureVision from "@/components/FutureVision";
 import ContactSection from "@/components/ContactSection";
 import { useIsLinkedInApp } from "@/hooks/useIsLinkedInApp";
+
+// Lazy load heavy canvas components
+const MatrixRain = lazy(() => import("@/components/MatrixRain"));
 
 const Index = () => {
   const isLinkedIn = useIsLinkedInApp();
@@ -45,16 +49,18 @@ const Index = () => {
 
       {/* Global Matrix Rain Background Layer - Disabled for LinkedIn to prevent crash */}
       {!isLinkedIn && (
-        <motion.div 
-          style={{ 
-            opacity: matrixOpacityCombined,
-            maskImage: "linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)",
-            WebkitMaskImage: "linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)"
-          }}
-          className="fixed inset-0 pointer-events-none z-10 overflow-hidden"
-        >
-          <MatrixRain opacity={0.3} />
-        </motion.div>
+        <Suspense fallback={null}>
+          <motion.div 
+            style={{ 
+              opacity: matrixOpacityCombined,
+              maskImage: "linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)",
+              WebkitMaskImage: "linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)"
+            }}
+            className="fixed inset-0 pointer-events-none z-10 overflow-hidden"
+          >
+            <MatrixRain opacity={0.3} />
+          </motion.div>
+        </Suspense>
       )}
 
       <div className="relative z-20 w-full">

@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
-import SpeedLines from "./SpeedLines";
-
+import { lazy, Suspense } from "react";
 import { useIsLinkedInApp } from "@/hooks/useIsLinkedInApp";
+
+// Lazy load the heavy 3D component to prevent LinkedIn webview crashes
+const SpeedLines = lazy(() => import("./SpeedLines"));
 
 const HeroSection = () => {
   const isLinkedIn = useIsLinkedInApp();
@@ -28,7 +30,9 @@ const HeroSection = () => {
         {isLinkedIn ? (
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#1a1a2e_0%,#0B0B0F_100%)] opacity-80" />
         ) : (
-          <SpeedLines />
+          <Suspense fallback={null}>
+            <SpeedLines />
+          </Suspense>
         )}
       </div>
 
