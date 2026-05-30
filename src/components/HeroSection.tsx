@@ -1,15 +1,15 @@
 import { motion } from "framer-motion";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import { useIsLinkedInApp } from "@/hooks/useIsLinkedInApp";
 
 // Lazy load the heavy 3D component to prevent LinkedIn webview crashes
-const SpeedLines = lazy(() => import("./SpeedLines"));
+
 
 const HeroSection = () => {
   const isLinkedIn = useIsLinkedInApp();
 
   return (
-    <section className="relative h-screen min-h-[600px] overflow-hidden bg-[#0B0B0F]">
+    <section className="relative h-screen min-h-[600px] overflow-hidden bg-transparent">
       {/* Brand Header */}
       <div className="absolute top-8 right-8 z-30 pointer-events-none">
         <motion.div
@@ -25,19 +25,10 @@ const HeroSection = () => {
         </motion.div>
       </div>
 
-      {/* Background layer */}
-      <div className="absolute inset-0 w-full h-full z-0">
-        {isLinkedIn ? (
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,#1a1a2e_0%,#0B0B0F_100%)] opacity-80" />
-        ) : (
-          <Suspense fallback={null}>
-            <SpeedLines />
-          </Suspense>
-        )}
-      </div>
+
 
       {/* Radial vignette overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(11,11,15,0.8)_100%)] z-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(11,11,15,0.4)_100%)] z-10 pointer-events-none" />
 
       {/* Content container */}
       <div className="relative z-20 h-full flex items-center justify-center px-6 max-w-5xl mx-auto text-center">
