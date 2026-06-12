@@ -1,12 +1,4 @@
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useMotionValueEvent,
-  useVelocity,
-  useSpring,
-  MotionValue,
-} from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
 import { useState, useRef } from "react";
 
 const phases = [
@@ -50,49 +42,6 @@ const phases = [
 const CARD_ANGLE = 360 / phases.length;
 const WHEEL_RADIUS = 420;
 
-// Long-exposure style light streaks, ignited by scroll velocity
-const TRAILS = [
-  { top: "12%", width: "55%", left: "-10%", color: "hsl(var(--neon-blue) / 0.9)", height: 2, tilt: -3, delayFactor: 1.0 },
-  { top: "22%", width: "70%", left: "40%", color: "hsl(28 100% 60% / 0.75)", height: 1.5, tilt: -1.5, delayFactor: 0.7 },
-  { top: "35%", width: "45%", left: "-5%", color: "hsl(320 90% 65% / 0.6)", height: 1, tilt: 2, delayFactor: 1.3 },
-  { top: "48%", width: "80%", left: "25%", color: "hsl(var(--neon-blue) / 0.7)", height: 2.5, tilt: 0, delayFactor: 0.85 },
-  { top: "61%", width: "60%", left: "-15%", color: "hsl(45 100% 62% / 0.7)", height: 1.5, tilt: 1.5, delayFactor: 1.15 },
-  { top: "73%", width: "50%", left: "55%", color: "hsl(320 90% 65% / 0.55)", height: 1, tilt: -2, delayFactor: 0.6 },
-  { top: "84%", width: "75%", left: "5%", color: "hsl(28 100% 60% / 0.6)", height: 2, tilt: 3, delayFactor: 1.4 },
-];
-
-const LightTrail = ({
-  trail,
-  intensity,
-}: {
-  trail: (typeof TRAILS)[number];
-  intensity: MotionValue<number>;
-}) => {
-  const opacity = useTransform(intensity, [0, 1], [0, 1]);
-  const scaleX = useTransform(intensity, [0, 1], [0.1, 1 * trail.delayFactor]);
-  const x = useTransform(intensity, [0, 1], [0, trail.delayFactor > 1 ? 60 : -60]);
-
-  return (
-    <motion.div
-      aria-hidden
-      className="absolute rounded-full"
-      style={{
-        top: trail.top,
-        left: trail.left,
-        width: trail.width,
-        height: trail.height,
-        rotate: trail.tilt,
-        opacity,
-        scaleX,
-        x,
-        background: `linear-gradient(90deg, transparent, ${trail.color}, transparent)`,
-        boxShadow: `0 0 12px ${trail.color}`,
-        filter: "blur(0.5px)",
-      }}
-    />
-  );
-};
-
 const StoryTimeline = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -107,13 +56,6 @@ const StoryTimeline = () => {
     scrollYProgress,
     [0, 1],
     [0, -CARD_ANGLE * (phases.length - 1)]
-  );
-
-  // Trail intensity follows scroll speed: ignites while spinning, fades at rest
-  const scrollVelocity = useVelocity(scrollYProgress);
-  const trailIntensity = useSpring(
-    useTransform(scrollVelocity, (v) => Math.min(1, Math.abs(v) * 4)),
-    { stiffness: 120, damping: 28 }
   );
 
   useMotionValueEvent(scrollYProgress, "change", (v) => {
@@ -154,13 +96,6 @@ const StoryTimeline = () => {
           className="relative w-full max-w-5xl h-[360px] flex items-center justify-center"
           style={{ perspective: "1200px" }}
         >
-          {/* Velocity-reactive light trails */}
-          <div className="absolute inset-x-0 -inset-y-12 pointer-events-none overflow-hidden">
-            {TRAILS.map((trail, i) => (
-              <LightTrail key={i} trail={trail} intensity={trailIntensity} />
-            ))}
-          </div>
-
           <motion.div
             className="relative w-[320px] h-[340px]"
             style={{ rotateY, transformStyle: "preserve-3d" }}
