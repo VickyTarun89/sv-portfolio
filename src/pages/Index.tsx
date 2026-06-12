@@ -8,10 +8,10 @@ import AIExperience from "@/components/AIExperience";
 import SkillsSection from "@/components/SkillsSection";
 import ContactSection from "@/components/ContactSection";
 import { useIsLinkedInApp } from "@/hooks/useIsLinkedInApp";
-import Unified3DScene from "@/components/3d/Unified3DScene";
 import HudNavigation from "@/components/HudNavigation";
 
-// Lazy load heavy canvas components
+// Lazy load heavy canvas components (keeps three.js out of the initial bundle)
+const Unified3DScene = lazy(() => import("@/components/3d/Unified3DScene"));
 const MatrixRain = lazy(() => import("@/components/MatrixRain"));
 
 const Index = () => {
