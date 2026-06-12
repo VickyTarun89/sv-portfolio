@@ -1,5 +1,5 @@
 ﻿import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Metric {
   label: string;
@@ -23,9 +23,45 @@ interface Project {
   metrics: Metric[];
   features: Feature[];
   version: string;
+  image?: string;
+  imageAlt?: string;
+  live?: boolean;
+  screens?: { src: string; alt: string }[];
+  liveStatsUrl?: string;
 }
 
 const PROJECTS: Project[] = [
+  {
+    id: "nammaooru",
+    title: "NammaOoru",
+    subtitle: "Civic Tech — Live Public Platform",
+    description: "Anonymous civic grievance reporting for Chennai. Every report is geo-matched offline to its GCC ward and assembly constituency, putting corporators and MLAs on the same public scoreboard. No login, no email, zero PII — by design.",
+    stack: ["React", "Vite", "Leaflet", "turf.js", "Neon Postgres", "Cloudflare R2", "Vercel"],
+    cta: "Visit nammaooru.site",
+    link: "https://nammaooru.site",
+    version: "NAMMAOORU_LIVE_v1.0",
+    image: "/projects/nammaooru-logo.png",
+    imageAlt: "NammaOoru — Report Chennai civic issues anonymously",
+    live: true,
+    liveStatsUrl: "https://www.nammaooru.site/api/leaderboard",
+    screens: [
+      { src: "/projects/nammaooru-feed.jpg", alt: "NammaOoru live feed — civic issue reports clustered on a Chennai map" },
+      { src: "/projects/nammaooru-detail.jpg", alt: "Report detail — garbage report routed to Ward 99 Anna Nagar" },
+      { src: "/projects/nammaooru-leaderboard.jpg", alt: "Accountability Board — wards ranked by reports filed vs resolved" },
+    ],
+    metrics: [
+      { label: "GCC Wards Mapped", value: "200", change: "OFFLINE GEO" },
+      { label: "Constituencies", value: "16", change: "DUAL-ROUTED" },
+      { label: "PII Collected", value: "0", change: "ANONYMOUS" },
+      { label: "Languages", value: "த / EN", change: "TAMIL-FIRST" },
+    ],
+    features: [
+      { label: "Dual-Routing Accountability", desc: "One report lands on both the ward and MLA scoreboards — no buck-passing" },
+      { label: "Anonymous by Design", desc: "No accounts, EXIF stripping, hashed short-TTL IPs for spam control only" },
+      { label: "Public Leaderboard", desc: "Wards and constituencies ranked by reports filed vs. resolved" },
+      { label: "Offline Spatial Lookup", desc: "turf.js point-in-polygon over open DataMeet GeoJSON in serverless functions" },
+    ]
+  },
   {
     id: "crm",
     title: "Construction CRM",
@@ -94,6 +130,40 @@ const PROJECTS: Project[] = [
   }
 ];
 
+const LiveStats = ({ url }: { url: string }) => {
+  const [stats, setStats] = useState<{ total: number; resolved: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(url)
+      .then((r) => r.json())
+      .then((json) => {
+        const rows: { stats?: { total?: number; resolved?: number } }[] = json?.data;
+        if (!Array.isArray(rows)) return;
+        const total = rows.reduce((sum, row) => sum + (row.stats?.total ?? 0), 0);
+        const resolved = rows.reduce((sum, row) => sum + (row.stats?.resolved ?? 0), 0);
+        if (!cancelled && total > 0) setStats({ total, resolved });
+      })
+      .catch(() => {
+        // CORS or network failure — static metrics already cover the card
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  if (!stats) return null;
+
+  return (
+    <div className="flex items-center gap-2.5 mb-8 px-4 py-3 border border-green-400/20 bg-green-400/[0.03]">
+      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" />
+      <span className="font-display text-[11px] tracking-[0.15em] uppercase text-green-400/90">
+        Live: {stats.total} reports filed · {stats.resolved} resolved across Chennai
+      </span>
+    </div>
+  );
+};
+
 export const FeaturedProject = () => {
   const [activeTab, setActiveTab] = useState(0);
   const currentProject = PROJECTS[activeTab];
@@ -139,11 +209,24 @@ export const FeaturedProject = () => {
                 
                 {/* Project Info */}
                 <div className="p-8 lg:p-16 lg:w-1/2 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-white/5">
+                  {currentProject.image && currentProject.screens && (
+                    <img
+                      src={currentProject.image}
+                      alt={currentProject.imageAlt ?? currentProject.title}
+                      className="h-16 w-auto mb-6 self-start drop-shadow-[0_0_18px_hsl(var(--primary)/0.3)]"
+                    />
+                  )}
                   <div className="flex items-center gap-3 mb-6">
                     <span className="w-8 h-px bg-primary/40" />
                     <span className="font-display text-xs tracking-[0.4em] uppercase text-primary">
                       {currentProject.subtitle}
                     </span>
+                    {currentProject.live && (
+                      <span className="flex items-center gap-1.5 px-2 py-0.5 border border-green-400/30 bg-green-400/5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                        <span className="font-display text-[10px] tracking-[0.2em] uppercase text-green-400">Live</span>
+                      </span>
+                    )}
                   </div>
                   
                   <h3 className="font-display text-3xl sm:text-4xl font-bold text-foreground mb-6 leading-tight">
@@ -193,6 +276,44 @@ export const FeaturedProject = () => {
                       {currentProject.version}
                     </span>
                   </div>
+
+                  {/* Real app screenshots */}
+                  {currentProject.screens ? (
+                    <div className="grid grid-cols-3 gap-3 mb-8">
+                      {currentProject.screens.map((screen, i) => (
+                        <motion.div
+                          key={screen.src}
+                          initial={{ opacity: 0, y: 14 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.1 }}
+                          className="overflow-hidden rounded-lg border border-white/10 bg-black/40 hover:border-primary/40 transition-colors duration-300"
+                        >
+                          <img
+                            src={screen.src}
+                            alt={screen.alt}
+                            className="w-full aspect-[10/19] object-cover object-top"
+                          />
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : currentProject.image && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      className="flex justify-center mb-8"
+                    >
+                      <img
+                        src={currentProject.image}
+                        alt={currentProject.imageAlt ?? currentProject.title}
+                        className="max-h-48 w-auto drop-shadow-[0_0_25px_hsl(var(--primary)/0.35)]"
+                      />
+                    </motion.div>
+                  )}
+
+                  {/* Live production stats */}
+                  {currentProject.liveStatsUrl && <LiveStats url={currentProject.liveStatsUrl} />}
 
                   {/* Telemetry metrics grid */}
                   <div className="grid grid-cols-2 gap-4 mb-8">

@@ -36,7 +36,7 @@ const phases = [
     id: 5,
     year: "Phase 05",
     title: "AI + SaaS Builder",
-    description: "The Singularity — building tactical intelligence systems and neural architectures that turn chaos into clarity.",
+    description: "The Singularity — shipping live products like NammaOoru, Chennai's anonymous civic reporting platform, and building intelligence systems that turn chaos into clarity.",
     icon: "🤖",
   },
 ];
