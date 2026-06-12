@@ -43,7 +43,7 @@ const Index = () => {
   );
 
   return (
-    <main className="min-h-screen overflow-x-hidden scroll-smooth selection:bg-primary/20 selection:text-primary relative bg-transparent">
+    <main className="min-h-screen overflow-x-clip scroll-smooth selection:bg-primary/20 selection:text-primary relative bg-transparent">
       {/* Global 3D Scroll Linked Background */}
       {!isLinkedIn && (
         <div className="fixed inset-0 z-0 pointer-events-none">

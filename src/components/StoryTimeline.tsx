@@ -1,7 +1,5 @@
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useState, useRef, lazy, Suspense } from "react";
-
-const WireframeCanvas = lazy(() => import("./wireframes/WireframeCanvas"));
+import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
+import { useState, useRef } from "react";
 
 const phases = [
   {
@@ -41,118 +39,120 @@ const phases = [
   },
 ];
 
+const CARD_ANGLE = 360 / phases.length;
+const WHEEL_RADIUS = 420;
+
 const StoryTimeline = () => {
-  const [activePhase, setActivePhase] = useState<number | null>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+
   const { scrollYProgress } = useScroll({
     target: sectionRef,
-    offset: ["start end", "end start"],
+    offset: ["start start", "end end"],
   });
 
-  const headerY = useTransform(scrollYProgress, [0, 1], [80, -40]);
-  const lineScale = useTransform(scrollYProgress, [0, 0.5], [0, 1]);
+  // Spin the wheel one card per scroll step so each phase lands front-center
+  const rotateY = useTransform(
+    scrollYProgress,
+    [0, 1],
+    [0, -CARD_ANGLE * (phases.length - 1)]
+  );
+
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    const idx = Math.round(v * (phases.length - 1));
+    setActive(Math.min(phases.length - 1, Math.max(0, idx)));
+  });
+
+  const jumpTo = (idx: number) => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const scrollable = section.offsetHeight - window.innerHeight;
+    window.scrollTo({
+      top: section.offsetTop + (scrollable * idx) / (phases.length - 1),
+      behavior: "smooth",
+    });
+  };
 
   return (
-    <section ref={sectionRef} id="work" className="relative py-32 px-6 overflow-hidden">
-      {/* Parallax background glow */}
-      <motion.div
-        className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--neon-blue)/0.03),transparent_60%)]"
-        style={{ y: useTransform(scrollYProgress, [0, 1], [50, -50]) }}
-      />
-
-      {/* 3D Wireframe holographic backdrop */}
-      <Suspense fallback={null}>
-        <WireframeCanvas activePhase={activePhase} />
-      </Suspense>
-
-      {/* Section header with parallax */}
-      <motion.div
-        style={{ y: headerY }}
-        className="text-center mb-20 max-w-3xl mx-auto relative z-10"
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-        >
+    <section
+      ref={sectionRef}
+      id="work"
+      className="relative"
+      style={{ height: `${phases.length * 100}vh` }}
+    >
+      <div className="sticky top-0 h-screen flex flex-col items-center justify-center overflow-hidden px-6">
+        {/* Section header */}
+        <div className="text-center mb-12 relative z-10">
           <span className="font-display text-xs tracking-[0.4em] uppercase text-primary mb-4 block">
             Race Log
           </span>
           <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground">
             The Journey
           </h2>
-        </motion.div>
-      </motion.div>
+        </div>
 
-      {/* Timeline */}
-      <div className="max-w-4xl mx-auto relative z-10">
-        {/* Central line with parallax scale */}
-        <motion.div
-          className="absolute left-8 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-primary/30 to-transparent origin-top"
-          style={{ scaleY: lineScale }}
-        />
-
-        {phases.map((phase, i) => (
+        {/* 3D roulette wheel */}
+        <div
+          className="relative w-full max-w-5xl h-[360px] flex items-center justify-center"
+          style={{ perspective: "1200px" }}
+        >
           <motion.div
-            key={phase.id}
-            initial={{ opacity: 0, x: i % 2 === 0 ? -40 : 40, y: 60 }}
-            whileInView={{ opacity: 1, x: 0, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.6, delay: i * 0.1 }}
-            className={`relative flex items-start mb-16 ${
-              i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
-            } flex-row`}
-            onMouseEnter={() => setActivePhase(phase.id)}
-            onMouseLeave={() => setActivePhase(null)}
+            className="relative w-[320px] h-[340px]"
+            style={{ rotateY, transformStyle: "preserve-3d" }}
           >
-            {/* Node */}
-            <div className="absolute left-8 md:left-1/2 -translate-x-1/2 z-10">
-              <div
-                className={`w-4 h-4 rounded-full border-2 transition-all duration-300 ${
-                  activePhase === phase.id
-                    ? "border-primary bg-primary box-glow-blue scale-150"
-                    : "border-primary/40 bg-background"
+            {phases.map((phase, i) => {
+              const isActive = i === active;
+              return (
+                <div
+                  key={phase.id}
+                  className={`absolute inset-0 glass-tron-card p-8 flex flex-col justify-center transition-[opacity,border-color] duration-500 ${
+                    isActive
+                      ? "opacity-100 border-primary/40 box-glow-blue"
+                      : "opacity-20 pointer-events-none"
+                  }`}
+                  style={{
+                    transform: `rotateY(${i * CARD_ANGLE}deg) translateZ(${WHEEL_RADIUS}px)`,
+                    backfaceVisibility: "hidden",
+                  }}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">{phase.icon}</span>
+                    <span className="font-display text-[10px] tracking-[0.3em] text-primary/70 uppercase">
+                      {phase.year}
+                    </span>
+                  </div>
+                  <h3 className="font-display text-xl font-semibold text-foreground mb-3">
+                    {phase.title}
+                  </h3>
+                  <p className="font-body text-muted-foreground text-sm leading-relaxed">
+                    {phase.description}
+                  </p>
+                </div>
+              );
+            })}
+          </motion.div>
+        </div>
+
+        {/* Progress indicator */}
+        <div className="flex items-center gap-6 mt-12 relative z-10">
+          <span className="font-display text-[10px] tracking-[0.3em] text-muted-foreground uppercase tabular-nums">
+            {String(active + 1).padStart(2, "0")} / {String(phases.length).padStart(2, "0")}
+          </span>
+          <div className="flex gap-3">
+            {phases.map((phase, i) => (
+              <button
+                key={phase.id}
+                onClick={() => jumpTo(i)}
+                aria-label={`Go to ${phase.title}`}
+                className={`h-1.5 transition-all duration-300 ${
+                  i === active
+                    ? "w-8 bg-primary box-glow-blue"
+                    : "w-3 bg-white/15 hover:bg-white/30"
                 }`}
               />
-            </div>
-
-            {/* Content card */}
-            <div
-              className={`ml-20 md:ml-0 ${
-                i % 2 === 0 ? "md:mr-auto md:pr-16 md:w-1/2 md:text-right" : "md:ml-auto md:pl-16 md:w-1/2"
-              }`}
-            >
-              <div
-                className={`p-6 transition-all duration-300 cursor-default glass-tron-card ${
-                  activePhase === phase.id
-                    ? "border-primary/40 box-glow-blue scale-[1.02]"
-                    : "border-white/10"
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-2xl">{phase.icon}</span>
-                  <span className="font-display text-[10px] tracking-[0.3em] text-primary/70 uppercase">
-                    {phase.year}
-                  </span>
-                </div>
-                <h3 className="font-display text-lg font-semibold text-foreground mb-2">
-                  {phase.title}
-                </h3>
-                <motion.p
-                  animate={{
-                    height: activePhase === phase.id ? "auto" : "0",
-                    opacity: activePhase === phase.id ? 1 : 0,
-                    marginTop: activePhase === phase.id ? "1rem" : "0"
-                  }}
-                  className="font-body text-muted-foreground overflow-hidden text-sm leading-relaxed"
-                >
-                  {phase.description}
-                </motion.p>
-              </div>
-            </div>
-          </motion.div>
-        ))}
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
