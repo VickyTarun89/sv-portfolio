@@ -171,9 +171,32 @@ export const FeaturedProject = () => {
   return (
     <section id="projects" className="relative py-32 px-6">
       <div className="max-w-6xl mx-auto relative z-10">
-        
+
+        {/* Section header */}
+        <div className="relative text-center mb-12 z-10">
+          {/* Frost layer — softens the wireframe behind the title so the text stays legible */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -inset-x-8 -inset-y-6 -z-10 rounded-3xl bg-background/55 backdrop-blur-md [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_95%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_95%)]"
+          />
+          <span className="font-display text-xs tracking-[0.4em] uppercase text-primary mb-4 block">
+            Shipped &amp; Live
+          </span>
+          <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-5 text-glow-blue">
+            Things I've Built
+          </h2>
+          <p className="font-body text-base sm:text-lg text-foreground/80 max-w-2xl mx-auto font-light">
+            Real products designed, built, and shipped to production — from a live civic platform to an open-source security tool. Tap any build below to explore it.
+          </p>
+        </div>
+
         {/* Header Tab Selector */}
-        <div className="flex flex-wrap justify-center gap-4 mb-16 border-b border-white/5 pb-6">
+        <div className="relative flex flex-wrap justify-center gap-4 mb-16 border-b border-white/5 pb-6">
+          {/* Frost layer — keeps the tab labels legible over the wireframe */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -inset-x-6 -top-4 bottom-0 -z-10 rounded-2xl bg-background/55 backdrop-blur-md [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)]"
+          />
           {PROJECTS.map((p, idx) => {
             const isActive = activeTab === idx;
             return (

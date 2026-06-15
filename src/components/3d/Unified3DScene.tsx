@@ -19,10 +19,14 @@ function DataGlobe({
   opacity,
   color,
   isMobile,
+  spinRef,
+  descentRef,
 }: {
   opacity: number;
   color: THREE.Color;
   isMobile: boolean;
+  spinRef: React.MutableRefObject<number>;
+  descentRef: React.MutableRefObject<number>;
 }) {
   const groupRef = useRef<THREE.Group>(null!);
   const sphereRef = useRef<THREE.LineSegments>(null!);
@@ -80,8 +84,15 @@ function DataGlobe({
 
   useFrame((state, delta) => {
     if (!groupRef.current || opacity <= 0.01) return;
-    groupRef.current.rotation.y += delta * 0.12;
+    // Spin speeds up while the Journey section is in view
+    const spin = 0.12 + Math.min(1, Math.max(0, spinRef.current)) * 0.7;
+    groupRef.current.rotation.y += delta * spin;
     groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.15) * 0.08;
+
+    // Sink toward the grid floor across the Builds section. Base y is 1; the grid
+    // floor sits at y = -10, so dropping ~16 units settles the globe at its edge.
+    const descent = Math.min(1, Math.max(0, descentRef.current));
+    groupRef.current.position.y = 1 - descent * 16;
 
     if (sphereRef.current) {
       const mat = sphereRef.current.material as THREE.LineBasicMaterial;
@@ -249,8 +260,11 @@ function CarStreak({ lane, initialZ, opacity, color }: { lane: number, initialZ:
 }
 
 // Scene rendering controller
-function SceneContent({ scrollYProgress, isMobile }: { scrollYProgress: MotionValue<number>; isMobile: boolean }) {
+function SceneContent({ scrollYProgress, fadeProgress, spinBoost, descentProgress, isMobile }: { scrollYProgress: MotionValue<number>; fadeProgress?: MotionValue<number>; spinBoost?: MotionValue<number>; descentProgress?: MotionValue<number>; isMobile: boolean }) {
   const scrollRef = useRef(0);
+  const fadeRef = useRef(0);
+  const spinRef = useRef(0);
+  const descentRef = useRef(0);
   const gridRef1 = useRef<THREE.GridHelper>(null!);
   const gridRef2 = useRef<THREE.GridHelper>(null!);
 
@@ -260,6 +274,33 @@ function SceneContent({ scrollYProgress, isMobile }: { scrollYProgress: MotionVa
     });
     return () => unsubscribe();
   }, [scrollYProgress]);
+
+  useEffect(() => {
+    if (!fadeProgress) return;
+    fadeRef.current = fadeProgress.get();
+    const unsubscribe = fadeProgress.on("change", (latest) => {
+      fadeRef.current = latest;
+    });
+    return () => unsubscribe();
+  }, [fadeProgress]);
+
+  useEffect(() => {
+    if (!spinBoost) return;
+    spinRef.current = spinBoost.get();
+    const unsubscribe = spinBoost.on("change", (latest) => {
+      spinRef.current = latest;
+    });
+    return () => unsubscribe();
+  }, [spinBoost]);
+
+  useEffect(() => {
+    if (!descentProgress) return;
+    descentRef.current = descentProgress.get();
+    const unsubscribe = descentProgress.on("change", (latest) => {
+      descentRef.current = latest;
+    });
+    return () => unsubscribe();
+  }, [descentProgress]);
 
   // Color objects for dynamic color shifts
   const cyanColor = useMemo(() => new THREE.Color("#00D4FF"), []);
@@ -287,27 +328,18 @@ function SceneContent({ scrollYProgress, isMobile }: { scrollYProgress: MotionVa
 
   useFrame((state) => {
     const progress = scrollRef.current;
+    // fade: 0 = grid/globe fully present (through Hero, Journey, Builds),
+    //       1 = fully faded out as the Matrix/agents block takes over.
+    const fade = Math.min(1, Math.max(0, fadeRef.current));
     const { camera, mouse } = state;
 
-    // Transition scene opacity out completely by 0.40 progress
-    let currentCityOpacity = 0.0;
-    if (progress <= 0.20) {
-      currentCityOpacity = 1.0;
-    } else if (progress <= 0.40) {
-      // Linear fade out between 0.20 and 0.40
-      currentCityOpacity = 1.0 - (progress - 0.20) / 0.20;
-    } else {
-      currentCityOpacity = 0.0;
-    }
-
+    // Scene opacity is driven by the fade progress, not raw scroll, so the
+    // grid + globe persist through the Journey and Builds sections.
+    const currentCityOpacity = 1.0 - fade;
     setCityOpacity(currentCityOpacity);
 
-    // Calculate dynamic color shift based on scroll progress
-    let lerpFactor = 0;
-    if (progress > 0.20) {
-      lerpFactor = Math.min(1.0, (progress - 0.20) / 0.20);
-    }
-    activeColor.lerpColors(cyanColor, greenColor, lerpFactor);
+    // Color shifts cyan -> green as the scene fades out
+    activeColor.lerpColors(cyanColor, greenColor, fade);
 
     // Update grid helper colors dynamically
     if (gridRef1.current && gridRef1.current.material) {
@@ -317,36 +349,14 @@ function SceneContent({ scrollYProgress, isMobile }: { scrollYProgress: MotionVa
       (gridRef2.current.material as any).color.copy(activeColor);
     }
 
-    // Camera motion path linking progress to coordinates
-    let targetX = 0;
-    let targetY = 0;
-    let targetZ = 30;
-    let targetRotX = 0;
-    let targetRotY = 0;
-
-    if (progress <= 0.20) {
-      // Phase 1: gliding forward through the grid tunnel
-      targetX = 0;
-      targetY = 0;
-      targetZ = 30 - progress * 20; // moving in
-      targetRotX = 0;
-      targetRotY = 0;
-    } else if (progress <= 0.40) {
-      // Phase 2: Tilt to Sky and fade out
-      const p = (progress - 0.20) / 0.20;
-      targetX = 0;
-      targetY = p * 12; // tilt upwards
-      targetZ = 26 - p * 10;
-      targetRotX = (p * Math.PI) / 5; // tilt view up
-      targetRotY = 0;
-    } else {
-      // Safe parking state when fully faded out
-      targetX = 0;
-      targetY = 12;
-      targetZ = 16;
-      targetRotX = Math.PI / 5;
-      targetRotY = 0;
-    }
+    // Camera motion path: gentle forward glide through the early sections,
+    // then a tilt-to-sky as the scene fades out near the agents block.
+    const glide = Math.min(progress, 0.5); // forward drift caps once past halfway
+    const targetX = 0;
+    const targetY = fade * 12; // tilt upwards on fade-out
+    const targetZ = 30 - glide * 28; // gliding forward through the grid tunnel
+    const targetRotX = (fade * Math.PI) / 5; // tilt view up on fade-out
+    const targetRotY = 0;
 
     // Global Interactive Mouse Parallax (Tilting the camera slightly)
     const mouseInfluenceX = (mouse.x * Math.PI) / 32;
@@ -371,7 +381,7 @@ function SceneContent({ scrollYProgress, isMobile }: { scrollYProgress: MotionVa
 
           <CityParticles opacity={cityOpacity} color={activeColor} isMobile={isMobile} />
 
-          <DataGlobe opacity={cityOpacity} color={activeColor} isMobile={isMobile} />
+          <DataGlobe opacity={cityOpacity} color={activeColor} isMobile={isMobile} spinRef={spinRef} descentRef={descentRef} />
 
           <gridHelper ref={gridRef1} args={[200, 40, "#00D4FF", "#00D4FF"]} position={[0, -10, 0]} transparent opacity={cityOpacity * 0.18} />
           <gridHelper ref={gridRef2} args={[200, 40, "#00D4FF", "#00D4FF"]} position={[0, 15, 0]} transparent opacity={cityOpacity * 0.08} />
@@ -381,7 +391,7 @@ function SceneContent({ scrollYProgress, isMobile }: { scrollYProgress: MotionVa
   );
 }
 
-export const Unified3DScene = ({ scrollYProgress }: { scrollYProgress: MotionValue<number> }) => {
+export const Unified3DScene = ({ scrollYProgress, fadeProgress, spinBoost, descentProgress }: { scrollYProgress: MotionValue<number>; fadeProgress?: MotionValue<number>; spinBoost?: MotionValue<number>; descentProgress?: MotionValue<number> }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -397,7 +407,7 @@ export const Unified3DScene = ({ scrollYProgress }: { scrollYProgress: MotionVal
         <PerspectiveCamera makeDefault position={[0, 0, 30]} fov={isMobile ? 80 : 60} />
         <color attach="background" args={["#0B0B0F"]} />
         <ambientLight intensity={1.5} />
-        <SceneContent scrollYProgress={scrollYProgress} isMobile={isMobile} />
+        <SceneContent scrollYProgress={scrollYProgress} fadeProgress={fadeProgress} spinBoost={spinBoost} descentProgress={descentProgress} isMobile={isMobile} />
       </Canvas>
       {/* Cinematic Vignette Overlay */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,#0B0B0F_95%)]" />

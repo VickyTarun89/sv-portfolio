@@ -34,9 +34,15 @@ const ContactSection = () => {
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground mb-6">
               Let's build something real.
             </h2>
-            <p className="font-body text-lg text-muted-foreground/80 mb-12 max-w-lg mx-auto leading-relaxed">
-              Open to collaborations, consulting, and building intelligent systems together.
+            <p className="font-body text-lg text-muted-foreground/80 mb-6 max-w-lg mx-auto leading-relaxed">
+              SaaS development, AI software services, and CRM engineering from Chennai — open to collaborations and consulting with clients across India and worldwide.
             </p>
+            <div className="flex items-center justify-center gap-2 mb-12">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+              <span className="font-display text-xs tracking-[0.3em] uppercase text-muted-foreground/70">
+                Based in Chennai, Tamil Nadu, India
+              </span>
+            </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-8">
               <a
@@ -56,13 +62,13 @@ const ContactSection = () => {
                 Email
               </a>
               <a
-                href="https://brix-pro-agentrive.vercel.app/"
+                href="https://www.nammaooru.site"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center gap-2 font-display text-sm tracking-widest uppercase text-muted-foreground hover:text-primary transition-all duration-300"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-primary/40 group-hover:bg-primary transition-colors" />
-                CRM Demo
+                NammaOoru
               </a>
             </div>
           </motion.div>

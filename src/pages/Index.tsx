@@ -18,13 +18,27 @@ const Index = () => {
   const isLinkedIn = useIsLinkedInApp();
   const matrixSectionsRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
+  const journeyRef = useRef<HTMLDivElement>(null);
+  const buildsRef = useRef<HTMLDivElement>(null);
 
   // Global scroll progress for 3D camera transitions
   const { scrollYProgress } = useScroll();
-  
+
   // Track continuous scroll for the entire Matrix block
   const { scrollYProgress: blockProgress } = useScroll({
     target: matrixSectionsRef,
+    offset: ["start end", "end start"]
+  });
+
+  // Journey section progress — used to spin the globe up while in view
+  const { scrollYProgress: journeyRaw } = useScroll({
+    target: journeyRef,
+    offset: ["start end", "end start"]
+  });
+
+  // Builds section progress — used to sink the globe toward the grid floor
+  const { scrollYProgress: buildsRaw } = useScroll({
+    target: buildsRef,
     offset: ["start end", "end start"]
   });
 
@@ -33,6 +47,17 @@ const Index = () => {
     target: contactRef,
     offset: ["start end", "start center"]
   });
+
+  // Grid + globe fade-out driver: stays fully visible through Hero, Journey and
+  // Builds, then fades out only as the Matrix (agents) block takes over.
+  const gridFadeProgress = useTransform(blockProgress, [0, 0.2], [0, 1]);
+
+  // Spin boost — ramps up as the Journey enters, holds fast through it, eases off
+  const globeSpinBoost = useTransform(journeyRaw, [0, 0.15, 0.85, 1], [0, 1, 1, 0]);
+
+  // Descent — globe sinks toward the grid floor across the Builds section so the
+  // grid's bottom edge becomes the launch point for the Matrix rain.
+  const globeDescent = useTransform(buildsRaw, [0.35, 0.9], [0, 1]);
 
   // Entry and Exit transforms for Matrix
   const entryOpacity = useTransform(blockProgress, [0, 0.25], [0, 1]);
@@ -48,7 +73,12 @@ const Index = () => {
       {!isLinkedIn && (
         <div className="fixed inset-0 z-0 pointer-events-none">
           <Suspense fallback={null}>
-            <Unified3DScene scrollYProgress={scrollYProgress} />
+            <Unified3DScene
+              scrollYProgress={scrollYProgress}
+              fadeProgress={gridFadeProgress}
+              spinBoost={globeSpinBoost}
+              descentProgress={globeDescent}
+            />
           </Suspense>
         </div>
       )}
@@ -82,10 +112,10 @@ const Index = () => {
         <div id="hero">
           <HeroSection />
         </div>
-        <div id="work">
+        <div id="work" ref={journeyRef}>
           <StoryTimeline />
         </div>
-        <div id="projects">
+        <div id="projects" ref={buildsRef}>
           <FeaturedProject />
         </div>
         

@@ -8,6 +8,12 @@ import { useIsLinkedInApp } from "@/hooks/useIsLinkedInApp";
 const HeroSection = () => {
   const isLinkedIn = useIsLinkedInApp();
 
+  // Smoothly glide to the Builds section, past the Journey
+  const goToProjects = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <section className="relative h-screen min-h-[600px] overflow-hidden bg-transparent" aria-label="Hero">
       <h2 className="sr-only">
@@ -84,12 +90,11 @@ const HeroSection = () => {
             className="relative flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <a
-              href="https://brix-pro-agentrive.vercel.app/"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="#projects"
+              onClick={goToProjects}
               className="group relative px-10 py-4 font-display text-xs tracking-[0.2em] uppercase bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 box-glow-blue"
             >
-              <span className="relative z-10 font-bold">Try Live CRM</span>
+              <span className="relative z-10 font-bold">Projects</span>
             </a>
           </motion.div>
         </motion.div>
