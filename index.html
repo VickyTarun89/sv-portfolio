@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      // Redirect the default *.pages.dev preview domain to the canonical custom domain.
+      // Runs before render; only fires on pages.dev, so it can never loop on shreevigneshm.in.
+      (function () {
+        if (location.hostname.endsWith('.pages.dev')) {
+          location.replace('https://shreevigneshm.in' + location.pathname + location.search + location.hash);
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0B0B0F" />
