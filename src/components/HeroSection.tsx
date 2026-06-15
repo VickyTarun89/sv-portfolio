@@ -9,7 +9,10 @@ const HeroSection = () => {
   const isLinkedIn = useIsLinkedInApp();
 
   return (
-    <section className="relative h-screen min-h-[600px] overflow-hidden bg-transparent">
+    <section className="relative h-screen min-h-[600px] overflow-hidden bg-transparent" aria-label="Hero">
+      <h2 className="sr-only">
+        SaaS Development, AI Software Services, and Custom CRM Engineering by M. Shree Vignesh
+      </h2>
       {/* Brand Header */}
       <div className="absolute top-8 right-8 z-30 pointer-events-none">
         <motion.div
@@ -32,13 +35,18 @@ const HeroSection = () => {
 
       {/* Content container */}
       <div className="relative z-20 h-full flex items-center justify-center px-6 max-w-5xl mx-auto text-center">
-        <motion.div>
+        <motion.div className="relative">
+          {/* Soft backdrop blur behind text for legibility over globe */}
+          <div
+            aria-hidden="true"
+            className="absolute -inset-x-8 -inset-y-12 sm:-inset-x-16 sm:-inset-y-16 backdrop-blur-[6px] pointer-events-none rounded-[3rem] [mask-image:radial-gradient(ellipse_at_center,black_45%,transparent_88%)]"
+          />
           {/* Status indicator */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
-            className="flex items-center justify-center gap-2 mb-8"
+            className="relative flex items-center justify-center gap-2 mb-8"
           >
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse-glow" />
             <span className="font-body text-xs tracking-[0.4em] uppercase text-primary/80">
@@ -51,7 +59,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold leading-tight mb-6 text-foreground"
+            className="relative font-display text-3xl sm:text-5xl lg:text-7xl font-bold leading-tight mb-6 text-foreground"
           >
             I build systems that turn{" "}
             <span className="text-accent text-glow-orange">chaos</span> into{" "}
@@ -63,9 +71,9 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.7 }}
-            className="font-body text-lg sm:text-xl lg:text-2xl text-muted-foreground/90 max-w-2xl mx-auto mb-12 font-light"
+            className="relative font-body text-lg sm:text-xl lg:text-2xl text-muted-foreground/90 max-w-2xl mx-auto mb-12 font-light"
           >
-            From aerospace engineering to AI-powered SaaS — built through iteration.
+            SaaS products, AI software services, and custom CRM systems — engineered with aerospace-grade rigor.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -73,7 +81,7 @@ const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.1, duration: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            className="relative flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <a
               href="https://brix-pro-agentrive.vercel.app/"

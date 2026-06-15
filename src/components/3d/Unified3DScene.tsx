@@ -14,6 +14,160 @@ function mulberry32(seed: number) {
   };
 }
 
+// Wireframe globe with arcing data connections — represents global SaaS reach
+function DataGlobe({
+  opacity,
+  color,
+  isMobile,
+}: {
+  opacity: number;
+  color: THREE.Color;
+  isMobile: boolean;
+}) {
+  const groupRef = useRef<THREE.Group>(null!);
+  const sphereRef = useRef<THREE.LineSegments>(null!);
+  const dotsRef = useRef<THREE.Points>(null!);
+  const haloRef = useRef<THREE.Mesh>(null!);
+  const radius = isMobile ? 7 : 10;
+  const arcCount = isMobile ? 7 : 14;
+  const dotCount = isMobile ? 80 : 180;
+
+  // Surface dots distributed via Fibonacci sphere
+  const dotPositions = useMemo(() => {
+    const arr = new Float32Array(dotCount * 3);
+    const phi = Math.PI * (Math.sqrt(5) - 1);
+    for (let i = 0; i < dotCount; i++) {
+      const y = 1 - (i / (dotCount - 1)) * 2;
+      const r = Math.sqrt(1 - y * y);
+      const theta = phi * i;
+      arr[i * 3] = Math.cos(theta) * r * radius;
+      arr[i * 3 + 1] = y * radius;
+      arr[i * 3 + 2] = Math.sin(theta) * r * radius;
+    }
+    return arr;
+  }, [dotCount]);
+
+  // Pre-computed arc geometries — great-circle paths between random surface points
+  const arcs = useMemo(() => {
+    const rand = mulberry32(7);
+    const list: { points: THREE.Vector3[]; speed: number; phase: number }[] = [];
+    for (let i = 0; i < arcCount; i++) {
+      const a = new THREE.Vector3(
+        rand() - 0.5,
+        rand() - 0.5,
+        rand() - 0.5
+      ).normalize().multiplyScalar(radius);
+      const b = new THREE.Vector3(
+        rand() - 0.5,
+        rand() - 0.5,
+        rand() - 0.5
+      ).normalize().multiplyScalar(radius);
+      const mid = a.clone().add(b).normalize().multiplyScalar(radius * 1.55);
+      const curve = new THREE.QuadraticBezierCurve3(a, mid, b);
+      list.push({
+        points: curve.getPoints(32),
+        speed: 0.4 + rand() * 0.6,
+        phase: rand() * Math.PI * 2,
+      });
+    }
+    return list;
+  }, [arcCount]);
+
+  const sphereGeometry = useMemo(() => {
+    const g = new THREE.SphereGeometry(radius, isMobile ? 18 : 28, isMobile ? 12 : 18);
+    return new THREE.EdgesGeometry(g);
+  }, [isMobile]);
+
+  useFrame((state, delta) => {
+    if (!groupRef.current || opacity <= 0.01) return;
+    groupRef.current.rotation.y += delta * 0.12;
+    groupRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.15) * 0.08;
+
+    if (sphereRef.current) {
+      const mat = sphereRef.current.material as THREE.LineBasicMaterial;
+      mat.color.copy(color);
+      mat.opacity = opacity * 0.55;
+    }
+    if (dotsRef.current) {
+      const mat = dotsRef.current.material as THREE.PointsMaterial;
+      mat.color.copy(color);
+      mat.opacity = opacity * 0.9;
+    }
+    if (haloRef.current) {
+      const mat = haloRef.current.material as THREE.MeshBasicMaterial;
+      mat.color.copy(color);
+      mat.opacity = opacity * 0.06;
+    }
+  });
+
+  if (opacity <= 0.01) return null;
+
+  return (
+    <group ref={groupRef} position={[0, 1, -4]}>
+      <mesh ref={haloRef}>
+        <sphereGeometry args={[radius * 1.08, 24, 16]} />
+        <meshBasicMaterial color={color} transparent opacity={opacity * 0.06} side={THREE.BackSide} depthWrite={false} />
+      </mesh>
+      <lineSegments ref={sphereRef} geometry={sphereGeometry}>
+        <lineBasicMaterial color={color} transparent opacity={opacity * 0.55} />
+      </lineSegments>
+      <points ref={dotsRef}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[dotPositions, 3]} />
+        </bufferGeometry>
+        <pointsMaterial size={0.08} transparent opacity={opacity * 0.8} depthWrite={false} sizeAttenuation />
+      </points>
+      {arcs.map((arc, i) => (
+        <DataArc key={i} points={arc.points} opacity={opacity} color={color} speed={arc.speed} phase={arc.phase} />
+      ))}
+    </group>
+  );
+}
+
+// A single animated arc that pulses along its great-circle path
+function DataArc({
+  points,
+  opacity,
+  color,
+  speed,
+  phase,
+}: {
+  points: THREE.Vector3[];
+  opacity: number;
+  color: THREE.Color;
+  speed: number;
+  phase: number;
+}) {
+  const lineRef = useRef<any>(null);
+  const dotRef = useRef<THREE.Mesh>(null!);
+
+  useFrame((state) => {
+    const t = (Math.sin(state.clock.elapsedTime * speed + phase) + 1) / 2;
+    if (dotRef.current) {
+      const idx = Math.floor(t * (points.length - 1));
+      const p = points[idx];
+      dotRef.current.position.set(p.x, p.y, p.z);
+      const mat = dotRef.current.material as THREE.MeshBasicMaterial;
+      mat.color.copy(color);
+      mat.opacity = opacity;
+    }
+    if (lineRef.current && lineRef.current.material) {
+      lineRef.current.material.color.copy(color);
+      lineRef.current.material.opacity = opacity * 0.45;
+    }
+  });
+
+  return (
+    <group>
+      <Line ref={lineRef} points={points} color="#00D4FF" lineWidth={1} transparent opacity={opacity * 0.45} />
+      <mesh ref={dotRef}>
+        <sphereGeometry args={[0.07, 8, 8]} />
+        <meshBasicMaterial color={color} transparent opacity={opacity} />
+      </mesh>
+    </group>
+  );
+}
+
 // Drifting light particles — fireflies floating through the grid tunnel
 function CityParticles({
   opacity,
@@ -216,6 +370,8 @@ function SceneContent({ scrollYProgress, isMobile }: { scrollYProgress: MotionVa
           ))}
 
           <CityParticles opacity={cityOpacity} color={activeColor} isMobile={isMobile} />
+
+          <DataGlobe opacity={cityOpacity} color={activeColor} isMobile={isMobile} />
 
           <gridHelper ref={gridRef1} args={[200, 40, "#00D4FF", "#00D4FF"]} position={[0, -10, 0]} transparent opacity={cityOpacity * 0.18} />
           <gridHelper ref={gridRef2} args={[200, 40, "#00D4FF", "#00D4FF"]} position={[0, 15, 0]} transparent opacity={cityOpacity * 0.08} />
