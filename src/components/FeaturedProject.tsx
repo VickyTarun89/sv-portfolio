@@ -213,7 +213,7 @@ export const FeaturedProject = () => {
                     <img
                       src={currentProject.image}
                       alt={currentProject.imageAlt ?? currentProject.title}
-                      className="h-28 w-auto mb-6 self-start drop-shadow-[0_0_22px_hsl(var(--primary)/0.35)]"
+                      className="h-36 sm:h-44 w-auto mb-8 self-start drop-shadow-[0_0_28px_hsl(var(--primary)/0.4)]"
                     />
                   )}
                   <div className="flex items-center gap-3 mb-6">

@@ -1,10 +1,10 @@
 import { useRef, useMemo, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Line, PerspectiveCamera, RoundedBox } from "@react-three/drei";
+import { Line, PerspectiveCamera } from "@react-three/drei";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
 
-// Deterministic PRNG so the skyline looks identical on every visit
+// Deterministic PRNG so the scene looks identical on every visit
 function mulberry32(seed: number) {
   return function () {
     let t = (seed += 0x6d2b79f5);
@@ -14,90 +14,7 @@ function mulberry32(seed: number) {
   };
 }
 
-// Procedural "lit windows" texture shared by all towers
-function createWindowTexture() {
-  const canvas = document.createElement("canvas");
-  canvas.width = 64;
-  canvas.height = 128;
-  const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "#080d16";
-  ctx.fillRect(0, 0, 64, 128);
-
-  const rand = mulberry32(1337);
-  for (let y = 8; y < 118; y += 10) {
-    for (let x = 7; x < 54; x += 9) {
-      const r = rand();
-      if (r > 0.55) {
-        // mostly cyan windows, occasional warm orange one
-        ctx.fillStyle =
-          r > 0.93
-            ? "rgba(255, 150, 50, 0.85)"
-            : `rgba(80, 215, 255, ${0.25 + rand() * 0.4})`;
-        ctx.fillRect(x, y, 4, 5);
-      }
-    }
-  }
-  // faint contour frame so every face keeps a hint of the Tron silhouette
-  ctx.strokeStyle = "rgba(0, 212, 255, 0.3)";
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(1, 1, 62, 126);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-
-// Rounded neon tower with lit windows
-function Monolith({
-  position,
-  size,
-  isCeiling = false,
-  opacity,
-  color,
-  texture,
-  phase,
-}: {
-  position: [number, number, number];
-  size: [number, number, number];
-  isCeiling?: boolean;
-  opacity: number;
-  color: THREE.Color;
-  texture: THREE.Texture;
-  phase: number;
-}) {
-  const ref = useRef<THREE.Group>(null!);
-  const matRef = useRef<THREE.MeshBasicMaterial>(null!);
-
-  useFrame((state) => {
-    if (!ref.current || opacity <= 0.01) return;
-    const time = state.clock.getElapsedTime();
-    const offset = Math.sin(time + position[0]) * 1.5;
-    ref.current.position.y = isCeiling ? position[1] - offset : position[1] + offset;
-    ref.current.scale.y = 1 + Math.abs(Math.sin(time * 0.25)) * 0.3;
-
-    if (matRef.current) {
-      // gentle per-tower brightness pulse; texture keeps its own cyan/orange
-      matRef.current.opacity = opacity * (0.85 + Math.sin(time * 0.9 + phase) * 0.15);
-    }
-  });
-
-  if (opacity <= 0.01) return null;
-
-  return (
-    <group ref={ref} position={position}>
-      <RoundedBox args={size} radius={0.32} smoothness={3}>
-        <meshBasicMaterial
-          ref={matRef}
-          map={texture}
-          transparent
-          opacity={opacity * 0.8}
-          toneMapped={false}
-        />
-      </RoundedBox>
-    </group>
-  );
-}
-
-// Drifting light particles — fireflies over the city
+// Drifting light particles — fireflies floating through the grid tunnel
 function CityParticles({
   opacity,
   color,
@@ -108,14 +25,14 @@ function CityParticles({
   isMobile: boolean;
 }) {
   const ref = useRef<THREE.Points>(null!);
-  const count = isMobile ? 140 : 280;
+  const count = isMobile ? 90 : 180;
 
   const positions = useMemo(() => {
     const rand = mulberry32(2024);
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
       arr[i * 3] = (rand() - 0.5) * 80;
-      arr[i * 3 + 1] = -10 + rand() * 28;
+      arr[i * 3 + 1] = -10 + rand() * 26;
       arr[i * 3 + 2] = (rand() - 0.5) * 90 - 5;
     }
     return arr;
@@ -123,10 +40,10 @@ function CityParticles({
 
   useFrame((state, delta) => {
     if (!ref.current || opacity <= 0.01) return;
-    ref.current.rotation.y += delta * 0.012;
+    ref.current.rotation.y += delta * 0.01;
     const mat = ref.current.material as THREE.PointsMaterial;
     mat.color.copy(color);
-    mat.opacity = opacity * (0.45 + Math.sin(state.clock.elapsedTime * 0.7) * 0.15);
+    mat.opacity = opacity * (0.35 + Math.sin(state.clock.elapsedTime * 0.7) * 0.12);
   });
 
   if (opacity <= 0.01) return null;
@@ -136,12 +53,12 @@ function CityParticles({
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.22} transparent opacity={0.5} depthWrite={false} sizeAttenuation />
+      <pointsMaterial size={0.18} transparent opacity={0.4} depthWrite={false} sizeAttenuation />
     </points>
   );
 }
 
-// traffic streak component for GridCity
+// Traffic light streaks gliding along the grid floor
 function CarStreak({ lane, initialZ, opacity, color }: { lane: number, initialZ: number; opacity: number; color: THREE.Color }) {
   const ref = useRef<THREE.Group>(null!);
   const speed = useMemo(() => 0.6 + Math.random() * 0.8, []);
@@ -195,31 +112,8 @@ function SceneContent({ scrollYProgress, isMobile }: { scrollYProgress: MotionVa
   const greenColor = useMemo(() => new THREE.Color("#00FF41"), []);
   const activeColor = useMemo(() => new THREE.Color("#00D4FF"), []);
 
-  const windowTexture = useMemo(() => createWindowTexture(), []);
-
-  // City Buildings Generation — seeded so the skyline is stable across loads,
-  // tighter spread on mobile so the narrow viewport still feels dense
-  const buildingCount = isMobile ? 20 : 30;
-  const buildings = useMemo(() => {
-    const rand = mulberry32(7);
-    const halfSpread = isMobile ? 14 : 22;
-    const clearing = isMobile ? 6 : 8;
-    const b = [];
-    for (let i = 0; i < buildingCount; i++) {
-      // keep a central boulevard clear so the headline sits on open space
-      const side = rand() > 0.5 ? 1 : -1;
-      const x = side * (clearing + rand() * halfSpread);
-      const h = 6 + rand() * 14;
-      // keep towers away from the camera plane (z ~26-30) so none become wall-sized
-      const z = (rand() - 0.5) * 70 - 22;
-      b.push({ position: [x, -10, z] as [number, number, number], size: [3 + rand() * 2, h, 3 + rand() * 2] as [number, number, number], isCeiling: false, phase: rand() * Math.PI * 2 });
-      b.push({ position: [x, 15, z] as [number, number, number], size: [3 + rand() * 2, h, 3 + rand() * 2] as [number, number, number], isCeiling: true, phase: rand() * Math.PI * 2 });
-    }
-    return b;
-  }, [buildingCount, isMobile]);
-
   // Traffic Generation
-  const trafficCount = isMobile ? 4 : 10;
+  const trafficCount = isMobile ? 6 : 14;
   const traffic = useMemo(() => {
     const rand = mulberry32(99);
     const t = [];
@@ -234,14 +128,14 @@ function SceneContent({ scrollYProgress, isMobile }: { scrollYProgress: MotionVa
     return t;
   }, [trafficCount]);
 
-  // Opacity calculation for the City elements
+  // Opacity calculation for the grid scene
   const [cityOpacity, setCityOpacity] = useState(1.0);
 
   useFrame((state) => {
     const progress = scrollRef.current;
     const { camera, mouse } = state;
 
-    // Transition City Opacity out completely by 0.40 progress
+    // Transition scene opacity out completely by 0.40 progress
     let currentCityOpacity = 0.0;
     if (progress <= 0.20) {
       currentCityOpacity = 1.0;
@@ -277,7 +171,7 @@ function SceneContent({ scrollYProgress, isMobile }: { scrollYProgress: MotionVa
     let targetRotY = 0;
 
     if (progress <= 0.20) {
-      // Phase 1: City View
+      // Phase 1: gliding forward through the grid tunnel
       targetX = 0;
       targetY = 0;
       targetZ = 30 - progress * 20; // moving in
@@ -317,17 +211,14 @@ function SceneContent({ scrollYProgress, isMobile }: { scrollYProgress: MotionVa
     <>
       {cityOpacity > 0.01 && (
         <group>
-          {buildings.map((b, i) => (
-            <Monolith key={i} {...b} opacity={cityOpacity} color={activeColor} texture={windowTexture} />
-          ))}
           {traffic.map((t) => (
             <CarStreak key={t.id} {...t} opacity={cityOpacity} color={activeColor} />
           ))}
 
           <CityParticles opacity={cityOpacity} color={activeColor} isMobile={isMobile} />
 
-          <gridHelper ref={gridRef1} args={[200, 20, "#00D4FF", "#00D4FF"]} position={[0, -10, 0]} transparent opacity={cityOpacity * 0.15} />
-          <gridHelper ref={gridRef2} args={[200, 20, "#00D4FF", "#00D4FF"]} position={[0, 15, 0]} transparent opacity={cityOpacity * 0.05} />
+          <gridHelper ref={gridRef1} args={[200, 40, "#00D4FF", "#00D4FF"]} position={[0, -10, 0]} transparent opacity={cityOpacity * 0.18} />
+          <gridHelper ref={gridRef2} args={[200, 40, "#00D4FF", "#00D4FF"]} position={[0, 15, 0]} transparent opacity={cityOpacity * 0.08} />
         </group>
       )}
     </>
