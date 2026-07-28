@@ -63,6 +63,30 @@ const PROJECTS: Project[] = [
     ]
   },
   {
+    id: "clawguard",
+    title: "ClawGuard",
+    subtitle: "Open Source — Security for AI Agents",
+    description: "A default-deny firewall for AI agents. Every tool call an agent makes is gated before it runs: key material is blocked outright, anything unusual pings your phone for approval, and every decision lands in a tamper-evident audit log. Works with any agent — plugin or no plugin.",
+    stack: ["TypeScript", "Node", "Zero-dependency core", "Telegram / WhatsApp API", "SHA-256 hash chain"],
+    cta: "View on GitHub",
+    link: "https://github.com/VickyTarun89/clawguard",
+    version: "CLAWGUARD_PROXY_v0.3",
+    image: "/projects/clawguard-mascot.png",
+    imageAlt: "ClawGuard — the firewall for AI agents",
+    metrics: [
+      { label: "Prompt Injection", value: "Blocked", change: "VERIFIED" },
+      { label: "Inbound Ports", value: "0", change: "LOOPBACK" },
+      { label: "Test Suite", value: "40/40", change: "PASS" },
+      { label: "Audit Log", value: "Hash-chained", change: "TAMPER-EVIDENT" },
+    ],
+    features: [
+      { label: "Default-Deny Policy", desc: "The config format cannot express 'allow by default'" },
+      { label: "Human In The Loop", desc: "Tap to approve on Telegram, WhatsApp, or the browser" },
+      { label: "Universal Proxy Mode", desc: "Gates any agent with no plugin installed" },
+      { label: "Tamper-Evident Log", desc: "Edit one past entry and verification breaks" },
+    ]
+  },
+  {
     id: "crm",
     title: "Construction CRM",
     subtitle: "Flagship Web Build",
