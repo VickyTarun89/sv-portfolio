@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Orbitron", "monospace"],
-        body: ["Rajdhani", "sans-serif"],
+        display: ["'Space Grotesk'", "Inter", "system-ui", "sans-serif"],
+        body: ["Inter", "system-ui", "sans-serif"],
+        mono: ["'JetBrains Mono'", "ui-monospace", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -102,6 +103,10 @@ export default {
           "0%": { top: "-2px" },
           "100%": { top: "100%" },
         },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -111,6 +116,7 @@ export default {
         "grid-scroll": "grid-scroll 2s linear infinite",
         "float": "float 6s ease-in-out infinite",
         "scan-line": "scan-line 4s linear infinite",
+        marquee: "marquee 40s linear infinite",
       },
     },
   },
